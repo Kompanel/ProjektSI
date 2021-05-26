@@ -1,9 +1,14 @@
 import random
+import numpy
 
-POPULATION_SIZE = 9
-NUMBER_OF_ELITE_SCHEDULES = 1
-TOURNAMENT_SELECTION_SIZE = 3
-MUTATION_RATE = 0.1
+
+def print_population(population):
+    schedules = population.get_schedules()
+
+    x = str(round(schedules[0].get_fitness(), 3)) + " " + str(schedules[0].get_numberOfConflicts()) + " " + str(
+        print_group(schedules[0].get_classes()))
+
+    print(x)
 
 
 def print_group(table):
@@ -17,6 +22,177 @@ def print_group(table):
     x = x + str(table[a]) + " ]"
 
     return x
+
+
+class GA:
+
+    def __init__(self, mutation_ratio, population_size, no_elite_chromosomes, size_of_tournament_selection):
+        self.mutation_ratio = mutation_ratio
+        self.population_size = population_size
+        self.no_elite_chromosomes = no_elite_chromosomes
+        self.size_of_tournament_selection = size_of_tournament_selection
+
+    def evolve(self, pop):
+        return self.mutate_population((self.crossover_population(pop)))
+
+    def crossover_population(self, population):
+        population_to_crossover = Population(0)
+
+        for i in range(self.no_elite_chromosomes):
+            population_to_crossover.get_schedules().append(population.get_schedules()[i])
+
+        i = self.no_elite_chromosomes
+
+        while i < self.population_size:
+            chromosome1 = self.select_tournament_population(population).get_schedules()[0]
+            chromosome2 = self.select_tournament_population(population).get_schedules()[0]
+            population_to_crossover.get_schedules().append(self.crossover_chromosome(chromosome1, chromosome2))
+            i += 1
+        return population_to_crossover
+
+    def crossover_chromosome(self, chromosome1, chromosome2):
+        new_chromosome = Schedule().init()
+
+        for i in range(len(new_chromosome.get_classes())):
+            if random.random() % 2 == 0:
+                new_chromosome.get_classes()[i] = chromosome1.get_classes()[i]
+            else:
+                new_chromosome.get_classes()[i] = chromosome2.get_classes()[i]
+
+        return new_chromosome
+
+    def mutate_population(self, population):
+
+        for i in range(self.no_elite_chromosomes, self.population_size):
+            self.mutate_chromosome(population.get_schedules()[i])
+
+        return population
+
+    def mutate_chromosome(self, chromosome_to_mutate):
+        chromosome = Schedule().init()
+
+        for i in range(0, len(chromosome_to_mutate.get_classes())):
+            if self.mutation_ratio > random.random():
+                chromosome_to_mutate.get_classes()[i] = chromosome.get_classes()[i]
+
+        return chromosome_to_mutate
+
+    def select_tournament_population(self, pop):
+
+        tournament_pop = Population(0)
+        i = 0
+
+        while i < self.size_of_tournament_selection:
+            tournament_pop.get_schedules().append(pop.get_schedules()[random.randrange(0, self.population_size)])
+            i += 1
+
+        tournament_pop.get_schedules().sort(key=lambda x: x.get_fitness(), reverse=True)
+
+        return tournament_pop
+
+
+class Schedule:
+
+    def __init__(self):
+        self.data = data
+        self.classes = []
+        self.numberOfConflicts = 0
+        self.fitness = -1
+        self.numberOfClasses = 0
+        self.classNumber = 0
+        self.fitnessChanged = True
+
+    def get_classes(self):
+        self.fitnessChanged = True
+        return self.classes
+
+    def get_numberOfConflicts(self):
+        return self.numberOfConflicts
+
+    def get_fitness(self):
+        if self.fitnessChanged:
+            self.fitness = self.calculate_fitness()
+            self.fitnessChanged = False
+        return self.fitness
+
+    def init(self):
+
+        for subject in self.data.subjects:
+            self.numberOfClasses += subject[1]
+
+        self.numberOfClasses *= len(self.data.groups)  # classes puste
+
+        for i in range(self.numberOfClasses):
+            newClass = Class(self.classNumber)
+            newClass.set_meeting_time(self.data.time[random.randrange(0, len(self.data.time))])
+            newClass.set_classroom(self.data.classrooms[random.randrange(0, len(self.data.classrooms))])
+            newClass.set_teacher(self.data.teachers[random.randrange(0, len(self.data.teachers))])
+            newClass.set_group(self.data.groups[random.randrange(0, len(self.data.groups))])
+            newClass.set_lesson(self.data.subjects[random.randrange(0, len(self.data.subjects))][0])
+            self.classes.append(newClass)
+        return self
+
+    def calculate_fitness(self):
+        self.numberOfConflicts = 0
+        classes = self.get_classes()
+        groups_hash_map = data.get_group_hashmap()
+        subject_counter_tab = []
+
+        for i in range(len(data.groups)):
+            subject_counter_tab.append(data.get_subject_for_fitness())
+
+        for i in range(0, len(classes)):
+            z = 0
+
+            index_group = groups_hash_map[classes[i].group.name]
+            index_lesson = data.subject_hasmap_tab[classes[i].lesson]
+
+            subject_counter_tab[index_group][index_lesson] -= 1
+
+            teacher_types_of_subject = classes[i].teacher.get_subject()
+
+            for j in range(len(teacher_types_of_subject)):
+                if classes[i].lesson == teacher_types_of_subject[j]:
+                    z += 1
+
+            if z == 0:
+                self.numberOfConflicts += 1
+
+            for j in range(0, len(classes)):
+                if classes[i].meeting_time == classes[j].meeting_time and classes[i].class_id != classes[j].class_id:
+                    if classes[i].classroom == classes[j].classroom:
+                        self.numberOfConflicts += 1
+                    if classes[i].teacher == classes[j].teacher:
+                        self.numberOfConflicts += 1
+
+        for j in range(len(data.groups)):
+            for i in range(len(subject_counter_tab[j])):
+                self.numberOfConflicts += abs(subject_counter_tab[j][i])
+
+        return 1 / (1.0 * self.numberOfConflicts + 1)
+
+    def __str__(self):
+        string = ""
+
+        for i in range(0, len(self.classes) - 1):
+            string += str(self.classes[i]) + ", "
+        string += str(self.classes[len(self.classes) - 1])
+
+        return string
+
+
+class Population:
+
+    def __init__(self, size):
+        self.size = size
+        self.data = data
+        self.schedules = []
+
+        for i in range(size):
+            self.schedules.append(Schedule().init())
+
+    def get_schedules(self):
+        return self.schedules
 
 
 # klasa jako pomieszczenie
@@ -108,195 +284,78 @@ class Configuration:
                      'fri1', 'fri2', 'fri3', 'fri4', 'fri5', 'fri6', 'fri7', 'fri8']
 
         self.subjects = [
-            ['math', 4], ['geo', 3], ['ang', 3], ['history', 2]
+            ['math', 4], ['ang', 3], ['history', 1], ['polish', 2], ['IT', 1], ['Physic', 1]
         ]
+
+        self.subject_hasmap_tab = {
+            'math': 0, 'ang': 1, 'history': 2, 'polish': 3, 'IT': 4, 'Physic': 5
+        }
 
         classroom1 = Classroom(1)
         classroom2 = Classroom(2)
         classroom3 = Classroom(3)
-        self.classrooms = [classroom1, classroom2, classroom3]
+        classroom4 = Classroom(4)
+        classroom5 = Classroom(5)
+        classroom6 = Classroom(6)
+        classroom7 = Classroom(7)
+        classroom8 = Classroom(8)
+        classroom9 = Classroom(9)
+        self.classrooms = [classroom1, classroom2, classroom3, classroom4, classroom5, classroom6, classroom7,
+                           classroom8, classroom9]
 
-        teacher1 = Teacher('Jhony', ['math', 'geo'])
-        teacher2 = Teacher('Mike', ['ang', 'history'])
-        self.teachers = [teacher1, teacher2]
+        teacher1 = Teacher('Jhon', ['math', 'geo'])
+        teacher2 = Teacher('Mike', ['ang', 'Physic', 'history'])
+        teacher3 = Teacher('Alex', ['ang', 'history'])
+        teacher4 = Teacher('Alice', ['math', 'Physic', 'geo'])
+        teacher5 = Teacher('Hector', ['math', 'geo'])
+        teacher6 = Teacher('Annie', ['math', 'geo', 'IT'])
+        teacher7 = Teacher('Max', ['ang', 'history'])
+        teacher8 = Teacher('Victor', ['ang', 'history', 'polish'])
+        teacher9 = Teacher('Maximus', ['math', 'Physic', 'polish'])
+        teacher10 = Teacher('Ann', ['polish', 'ang', 'IT'])
+        teacher11 = Teacher('Annie', ['polish', 'Physic', 'ang', 'IT'])
+        teacher12 = Teacher('Mathieu', ['polish', 'Physic', 'ang', 'IT'])
+        teacher13 = Teacher('Max', ['polish', 'Physic', 'ang', 'IT'])
+        self.teachers = [teacher1, teacher2, teacher3, teacher4, teacher5, teacher6, teacher7, teacher8, teacher9,
+                         teacher10, teacher11, teacher12, teacher13]
 
         group1 = Group('IA')
         group2 = Group('IB')
-        group3 = Group('IC')
-        self.groups = [group1, group2, group3]
+        group3 = Group('IIA')
+        group4 = Group('IIB')
+        group5 = Group('IIIA')
+        group6 = Group('IIIB')
+        self.groups = [group1, group2, group3, group4, group5, group6]
 
     def get_time(self):
         return self.time
 
+    def get_group_hashmap(self):
+        hashmap = {}
 
-class Schedule:
+        for i in range(len(self.groups)):
+            hashmap[self.groups[i].name] = i
 
-    def __init__(self):
-        self.data = data
-        self.classes = []
-        self.numberOfConflicts = 0
-        self.fitness = -1
-        self.numberOfClasses = 0
-        self.classNumber = 0
-        self.fitnessChanged = True
+        return hashmap
 
-    def get_classes(self):
-        self.fitnessChanged = True
-        return self.classes
+    def get_subject_for_fitness(self):
+        tab = []
 
-    def get_numberOfConflicts(self):
-        return self.numberOfConflicts
+        for i in range(len(self.subjects)):
+            tab.append(self.subjects[i][1])
 
-    def get_fitness(self):
-        if self.fitnessChanged:
-            self.fitness = self.calculate_fitness()
-            self.fitnessChanged = False
-        return self.fitness
-
-    def init(self):
-
-        for subject in self.data.subjects:
-            self.numberOfClasses += subject[1]
-
-        self.numberOfClasses *= len(self.data.groups)  # classes puste
-
-        for i in range(self.numberOfClasses):
-            newClass = Class(self.classNumber)
-            newClass.set_meeting_time(self.data.time[random.randrange(0, len(self.data.time))])
-            newClass.set_classroom(self.data.classrooms[random.randrange(0, len(self.data.classrooms))])
-            newClass.set_teacher(self.data.teachers[random.randrange(0, len(self.data.teachers))])
-            newClass.set_group(self.data.groups[random.randrange(0, len(self.data.groups))])
-            newClass.set_lesson(self.data.subjects[random.randrange(0, len(self.data.subjects))][0])
-            self.classes.append(newClass)
-        return self
-
-    def calculate_fitness(self):
-        self.numberOfConflicts = 0
-        classes = self.get_classes()
-
-        for i in range(0, len(classes)):
-            z = 0
-
-            teacher_types_of_subject = classes[i].teacher.get_subject()
-
-            for j in range(len(teacher_types_of_subject)):
-                if classes[i].lesson == teacher_types_of_subject[j]:
-                    z += 1
-
-            if z == 0:
-                self.numberOfConflicts += 1
-
-            for j in range(0, len(classes)):
-                if classes[i].meeting_time == classes[j].meeting_time and classes[i].class_id != classes[j].class_id:
-                    if classes[i].classroom == classes[j].classroom:
-                        self.numberOfConflicts += 1
-                    if classes[i].teacher == classes[j].teacher:
-                        self.numberOfConflicts += 1
-
-        return 1 / (1.0 * self.numberOfConflicts + 1)
-
-    def __str__(self):
-        string = ""
-
-        for i in range(0, len(self.classes) - 1):
-            string += str(self.classes[i]) + ", "
-        string += str(self.classes[len(self.classes) - 1])
-
-        return string
-
-
-class Population:
-
-    def __init__(self, size):
-        self.size = size
-        self.data = data
-        self.schedules = []
-
-        for i in range(size):
-            self.schedules.append(Schedule().init())
-
-    def get_schedules(self):
-        return self.schedules
-
-
-class Display:
-
-    def print_generation(self, population):
-        schedules = population.get_schedules()
-
-        for i in range(len(schedules)):
-            x = str(round(schedules[i].get_fitness(), 3)) + " " + str(schedules[i].get_numberOfConflicts()) + " " + str(
-                print_group(schedules[i].get_classes()))
-
-            print(x)
-
-    def print_schedule_as_table(self):
-        return None
-
-#
-# class GA:
-#
-#     def evolve(self, population):
-#         return self.mutate_population(self.crossover_population(population))
-#
-#     def crossover_population(self, pop):
-#         crossover_population = Population(0)
-#
-#         for i in range(NUMBER_OF_ELITE_SCHEDULES):
-#             crossover_population.get_schedules().append(pop.get_schedules()[i])
-#         i = NUMBER_OF_ELITE_SCHEDULES
-#
-#         while i < POPULATION_SIZE:
-#             schedule1 = self.select_tournament_population(pop).get_schedules()[0]
-#             schedule2 = self.select_tournament_population(pop).get_schedules()[0]
-#             crossover_population.get_schedules().append(self.crossover_schedule(schedule1, schedule2))
-#             i += 1
-#
-#         return crossover_population
-#
-#     def mutate_population(self, population):
-#         for i in range(NUMBER_OF_ELITE_SCHEDULES, POPULATION_SIZE):
-#             self.mutate_schedule(population.get_schedules()[i])
-#         return population
-#
-#     def crossover_schedule(self, schedule1, schedule2):
-#         crossoverSchedule = Schedule().init()
-#
-#         for i in range(0, len(crossoverSchedule.get_classes())):
-#             if random.random() > 0.5:
-#                 crossoverSchedule.get_classes()[i] = schedule1.get_classes()[i]
-#             else:
-#                 crossoverSchedule.get_classes()[i] = schedule2.get_classes()[i]
-#
-#         return crossoverSchedule
-#
-#     def mutate_schedule(self, mutateSchedule):
-#         schedule = Schedule.init()
-#
-#         for i in range(0, len(mutateSchedule.get_classes())):
-#             if MUTATION_RATE > random.random():
-#                 mutateSchedule.get_classes()[i] = schedule.get_classes()[i]
-#
-#         return mutateSchedule
-#
-#     def select_tournament_population(self, pop):
-#         tournament_pop = Population(0)
-#         i = 0
-#
-#         while i < TOURNAMENT_SELECTION_SIZE:
-#             tournament_pop.get_schedules().append(pop.get_schedules()[random.randrange(0, POPULATION_SIZE)])
-#             i += 1
-#
-#         tournament_pop.get_schedules().sort(key=lambda x: x.get_fitness(), reverse=True)
-#
-#         return tournament_pop
+        return tab
 
 
 data = Configuration()
-population = Population(POPULATION_SIZE)
+
+genetic = GA(mutation_ratio=0.01, population_size=50, no_elite_chromosomes=2, size_of_tournament_selection=6)
+population = Population(genetic.population_size)
 population.get_schedules().sort(key=lambda x: x.get_fitness(), reverse=True)
+print_population(population)
 
-display = Display()
-display.print_generation(population)
-
-
+while population.get_schedules()[0].get_fitness() != 1.0:
+    population = genetic.evolve(population)
+    population.get_schedules().sort(key=lambda x: x.get_fitness(), reverse=True)
+    print_population(population)
+    print()
