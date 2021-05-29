@@ -1,5 +1,12 @@
 import Genetic_Algoritm
+import Display
+import os
 
+def clearConsole():
+    command = 'clear'
+    if os.name in ('nt', 'dos'):  # If Machine is running on Windows, use cls
+        command = 'cls'
+    os.system(command)
 
 def print_population(population):
     schedules = population.get_chromosomes()
@@ -81,7 +88,7 @@ class Configuration:
                      'fri1', 'fri2', 'fri3', 'fri4', 'fri5', 'fri6', 'fri7', 'fri8']
 
         self.subjects = [
-            ['math', 4], ['ang', 3], ['history', 1], ['polish', 2], ['IT', 2], ['Physic', 1]
+            ['math', 5], ['ang', 4], ['history', 3], ['polish', 4], ['IT', 3], ['Physic', 3]
         ]
 
         self.subject_hasmap_tab = {
@@ -118,15 +125,12 @@ class Configuration:
 
         group1 = Group('IA')
         group2 = Group('IB')
-        group3 = Group('IIA')
-        group4 = Group('IIB')
-        group5 = Group('IIIA')
-        group6 = Group('IIIB')
-        group7 = Group('VA')
-        group8 = Group('VB')
-        group9 = Group('VIA')
-        group10 = Group('VIB')
-        self.groups = [group1, group2, group3, group4, group5, group6, group7, group8, group9, group10]
+        group4 = Group('IIA')
+        group5 = Group('IIB')
+        group7 = Group('IIIA')
+        group8 = Group('IIIB')
+
+        self.groups = [group1, group2, group4, group5, group7, group8]
 
     def get_time(self):
         return self.time
@@ -136,6 +140,14 @@ class Configuration:
 
         for i in range(len(self.groups)):
             hashmap[self.groups[i].name] = i
+
+        return hashmap
+
+    def get_time_hasmap(self):
+        hashmap = {}
+
+        for i in range(len(self.time)):
+            hashmap[self.time[i]] = i
 
         return hashmap
 
@@ -154,13 +166,15 @@ genetic = Genetic_Algoritm.GA(mutation_ratio=0.01, population_size=50, no_elite_
                               size_of_tournament_selection=3, data=data)
 population = Genetic_Algoritm.Population(genetic.population_size, data)
 population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
-print_population(population)
 
 while population.get_chromosomes()[0].get_fitness() != 1.0:
     population = genetic.evolve(population)
     population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
-    print_population(population)
-    print()
+    print(population.get_chromosomes()[0].numberOfConflicts)
+
 
 best_table = population.get_chromosomes()[0].get_classes()
 classes = data.groups
+time = data.time
+
+Display.display_table(groups=classes, time=time, tab_schedule=best_table, group_hashmap=data.get_group_hashmap(), time_hasmap=data.get_time_hasmap())
