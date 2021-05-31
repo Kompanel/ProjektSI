@@ -1,0 +1,13 @@
+Jhon:math,geo
+Mike:ang,Physic,history
+Alex:ang,history
+Alice:math,Physic,geo
+Hector:math,geo
+Annie:math,geo,IT
+Max:ang,history
+Victor:ang,history,polish
+Maximus:math,Physic,polish
+Ann:polish,ang,IT
+Annie:polish,Physic,ang,IT
+Mathieu:polish,Physic,ang,IT
+Max:polish,Physic,ang,IT

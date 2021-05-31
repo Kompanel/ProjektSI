@@ -122,7 +122,7 @@ class Chromosome:
         for i in range(0, len(classes)):
             z = 0
 
-            index_group = groups_hash_map[classes[i].group.name]
+            index_group = groups_hash_map[classes[i].group]
             index_lesson = self.data.subject_hasmap_tab[classes[i].lesson]
 
             subject_counter_tab[index_group][index_lesson] -= 1
