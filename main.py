@@ -65,47 +65,47 @@ class Configuration:
         }
 
         self.subjects = [
-            ['math', 4], ['ang', 3], ['history', 2], ['polish', 3], ['IT', 2], ['Physic', 3]
+            ['math', 5], ['ang', 3], ['history', 3], ['polish', 4], ['IT', 3], ['Physic', 3]
         ]
 
         self.subject_hasmap_tab = {
             'math': 0, 'ang': 1, 'history': 2, 'polish': 3, 'IT': 4, 'Physic': 5
         }
 
-        classroom1 = Usefull_classes.Classroom(1)
-        classroom2 = Usefull_classes.Classroom(2)
-        classroom3 = Usefull_classes.Classroom(3)
-        classroom4 = Usefull_classes.Classroom(4)
-        classroom5 = Usefull_classes.Classroom(5)
-        classroom6 = Usefull_classes.Classroom(6)
-        classroom7 = Usefull_classes.Classroom(7)
-        classroom8 = Usefull_classes.Classroom(8)
-        classroom9 = Usefull_classes.Classroom(9)
+        # classroom1 = Usefull_classes.Classroom(1)
+        # classroom2 = Usefull_classes.Classroom(2)
+        # classroom3 = Usefull_classes.Classroom(3)
+        # classroom4 = Usefull_classes.Classroom(4)
+        # classroom5 = Usefull_classes.Classroom(5)
+        # classroom6 = Usefull_classes.Classroom(6)
+        # classroom7 = Usefull_classes.Classroom(7)
+        # classroom8 = Usefull_classes.Classroom(8)
+        # classroom9 = Usefull_classes.Classroom(9)
         # self.classrooms = [classroom1, classroom2, classroom3, classroom4, classroom5, classroom6, classroom7, classroom8, classroom9]
         self.classrooms = files.rooms_tab()
 
-        teacher1 = Usefull_classes.Teacher('Jhon', ['math', 'geo'])
-        teacher2 = Usefull_classes.Teacher('Mike', ['ang', 'Physic', 'history'])
-        teacher3 = Usefull_classes.Teacher('Alex', ['ang', 'history'])
-        teacher4 = Usefull_classes.Teacher('Alice', ['math', 'Physic', 'geo'])
-        teacher5 = Usefull_classes.Teacher('Hector', ['math', 'geo'])
-        teacher6 = Usefull_classes.Teacher('Annie', ['math', 'geo', 'IT'])
-        teacher7 = Usefull_classes.Teacher('Max', ['ang', 'history'])
-        teacher8 = Usefull_classes.Teacher('Victor', ['ang', 'history', 'polish'])
-        teacher9 = Usefull_classes.Teacher('Maximus', ['math', 'Physic', 'polish'])
-        teacher10 = Usefull_classes.Teacher('Ann', ['polish', 'ang', 'IT'])
-        teacher11 = Usefull_classes.Teacher('Annie', ['polish', 'Physic', 'ang', 'IT'])
-        teacher12 = Usefull_classes.Teacher('Mathieu', ['polish', 'Physic', 'ang', 'IT'])
-        teacher13 = Usefull_classes.Teacher('Max', ['polish', 'Physic', 'ang', 'IT'])
+        # teacher1 = Usefull_classes.Teacher('Jhon', ['math', 'geo'])
+        # teacher2 = Usefull_classes.Teacher('Mike', ['ang', 'Physic', 'history'])
+        # teacher3 = Usefull_classes.Teacher('Alex', ['ang', 'history'])
+        # teacher4 = Usefull_classes.Teacher('Alice', ['math', 'Physic', 'geo'])
+        # teacher5 = Usefull_classes.Teacher('Hector', ['math', 'geo'])
+        # teacher6 = Usefull_classes.Teacher('Annie', ['math', 'geo', 'IT'])
+        # teacher7 = Usefull_classes.Teacher('Max', ['ang', 'history'])
+        # teacher8 = Usefull_classes.Teacher('Victor', ['ang', 'history', 'polish'])
+        # teacher9 = Usefull_classes.Teacher('Maximus', ['math', 'Physic', 'polish'])
+        # teacher10 = Usefull_classes.Teacher('Ann', ['polish', 'ang', 'IT'])
+        # teacher11 = Usefull_classes.Teacher('Annie', ['polish', 'Physic', 'ang', 'IT'])
+        # teacher12 = Usefull_classes.Teacher('Mathieu', ['polish', 'Physic', 'ang', 'IT'])
+        # teacher13 = Usefull_classes.Teacher('Max', ['polish', 'Physic', 'ang', 'IT'])
         # self.teachers = [teacher1, teacher2, teacher3, teacher4, teacher5, teacher6, teacher7, teacher8, teacher9, teacher10, teacher11, teacher12, teacher13]
         self.teachers = files.teacher_tab()
 
-        group1 = Usefull_classes.Group('IA')
-        group2 = Usefull_classes.Group('IB')
-        group4 = Usefull_classes.Group('IIA')
-        group5 = Usefull_classes.Group('IIB')
-        group7 = Usefull_classes.Group('IIIA')
-        group8 = Usefull_classes.Group('IIIB')
+        # group1 = Usefull_classes.Group('IA')
+        # group2 = Usefull_classes.Group('IB')
+        # group4 = Usefull_classes.Group('IIA')
+        # group5 = Usefull_classes.Group('IIB')
+        # group7 = Usefull_classes.Group('IIIA')
+        # group8 = Usefull_classes.Group('IIIB')
 
         # self.groups = [group1, group2, group4]
         self.groups = files.groups_tab()
@@ -140,28 +140,13 @@ class Configuration:
     def get_time_hasmap_to_string(self):
         return self.time_hasmap
 
-files.teacher_tab()
 
 data = Configuration()
 
-genetic = Genetic_Algoritm.GA(mutation_ratio=0.01, population_size=50, no_elite_chromosomes=1,
-                              size_of_tournament_selection=3, data=data)
-population = Genetic_Algoritm.Population(genetic.population_size, data)
-population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
+genetic = Genetic_Algoritm.GA(mutation_ratio=0.01, population_size=50, no_elite_chromosomes=1, data=data)
 
-x = 0
 
-while population.get_chromosomes()[0].get_fitness() != 1.0:
-    population = genetic.evolve(population)
-    population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
-    if population.get_chromosomes()[0].fitness > x:
-        x = population.get_chromosomes()[0].fitness
+best_table = genetic.get_best_table()
 
-        print(round(x, 3))
-
-best_table = population.get_chromosomes()[0].get_classes()
-classes = data.groups
-time = data.time
-
-Display.display_table(groups=classes, time=time, tab_schedule=best_table, group_hashmap=data.get_group_hashmap(),
+Display.display_table(groups=data.groups, time=data.time, tab_schedule=best_table, group_hashmap=data.get_group_hashmap(),
                       time_hasmap=data.get_time_hasmap(), time_hasmap_to_string=data.get_time_hasmap_to_string())

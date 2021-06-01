@@ -3,12 +3,30 @@ import random
 
 class GA:
 
-    def __init__(self, mutation_ratio, population_size, no_elite_chromosomes, size_of_tournament_selection, data):
+    def __init__(self, mutation_ratio, population_size, data, no_elite_chromosomes = 1):
         self.mutation_ratio = mutation_ratio
         self.population_size = population_size
         self.no_elite_chromosomes = no_elite_chromosomes
-        self.size_of_tournament_selection = size_of_tournament_selection
         self.data = data
+        self.best_population = None
+
+        population =Population(self.population_size, data)
+        population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
+
+        x = 0
+
+        while population.get_chromosomes()[0].get_fitness() != 1.0:
+            population = self.evolve(population)
+            population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
+            if round(population.get_chromosomes()[0].fitness, 3) > x:
+                x = round(population.get_chromosomes()[0].fitness, 3)
+
+                print(x)
+
+        self.best_population = population
+
+    def get_best_table(self):
+        return self.best_population.get_chromosomes()[0].get_classes()
 
     def evolve(self, pop):
         return self.mutate_population((self.crossover_population(pop)))
@@ -22,14 +40,14 @@ class GA:
         i = self.no_elite_chromosomes
 
         while i < self.population_size:
-            chromosome1 = self.select_tournament_population(population).get_chromosomes()[0]
-            chromosome2 = self.select_tournament_population(population).get_chromosomes()[0]
+            chromosome1 = population.get_chromosomes()[0]
+            chromosome2 = population.get_chromosomes()[0]
             population_to_crossover.get_chromosomes().append(self.crossover_chromosome(chromosome1, chromosome2))
             i += 1
         return population_to_crossover
 
     def crossover_chromosome(self, chromosome1, chromosome2):
-        new_chromosome = Chromosome(self.data).init()
+        new_chromosome = Chromosome(self.data)
 
         for i in range(len(new_chromosome.get_classes())):
             if random.random() % 2 == 0:
@@ -47,26 +65,13 @@ class GA:
         return population
 
     def mutate_chromosome(self, chromosome_to_mutate):
-        chromosome = Chromosome(self.data).init()
+        chromosome = Chromosome(self.data)
 
         for i in range(0, len(chromosome_to_mutate.get_classes())):
             if self.mutation_ratio > random.random():
                 chromosome_to_mutate.get_classes()[i] = chromosome.get_classes()[i]
 
         return chromosome_to_mutate
-
-    def select_tournament_population(self, pop):
-
-        tournament_pop = Population(0, self.data)
-        i = 0
-
-        while i < self.size_of_tournament_selection:
-            tournament_pop.get_chromosomes().append(pop.get_chromosomes()[random.randrange(0, self.population_size)])
-            i += 1
-
-        tournament_pop.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
-
-        return tournament_pop
 
 
 class Chromosome:
@@ -79,21 +84,6 @@ class Chromosome:
         self.numberOfClasses = 0
         self.classNumber = 0
         self.fitnessChanged = True
-
-    def get_classes(self):
-        self.fitnessChanged = True
-        return self.classes
-
-    def get_numberOfConflicts(self):
-        return self.numberOfConflicts
-
-    def get_fitness(self):
-        if self.fitnessChanged:
-            self.fitness = self.calculate_fitness()
-            self.fitnessChanged = False
-        return self.fitness
-
-    def init(self):
 
         for subject in self.data.subjects:
             self.numberOfClasses += subject[1]
@@ -108,7 +98,19 @@ class Chromosome:
             newClass.set_group(self.data.groups[random.randrange(0, len(self.data.groups))])
             newClass.set_lesson(self.data.subjects[random.randrange(0, len(self.data.subjects))][0])
             self.classes.append(newClass)
-        return self
+
+    def get_classes(self):
+        self.fitnessChanged = True
+        return self.classes
+
+    def get_numberOfConflicts(self):
+        return self.numberOfConflicts
+
+    def get_fitness(self):
+        if self.fitnessChanged:
+            self.fitness = self.calculate_fitness()
+            self.fitnessChanged = False
+        return self.fitness
 
     def calculate_fitness(self):
         self.numberOfConflicts = 0
@@ -167,7 +169,7 @@ class Population:
         self.chromosomes = []
 
         for i in range(size):
-            self.chromosomes.append(Chromosome(self.data).init())
+            self.chromosomes.append(Chromosome(self.data))
 
     def get_chromosomes(self):
         return self.chromosomes
