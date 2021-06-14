@@ -1,26 +1,31 @@
 import random
-
+import Removing_gaps
+import Display
 
 class GA:
 
-    def __init__(self, mutation_ratio, population_size, data, no_elite_chromosomes = 1):
+    def __init__(self, mutation_ratio, population_size, data, max_iteration, no_elite_chromosomes=1):
         self.mutation_ratio = mutation_ratio
         self.population_size = population_size
         self.no_elite_chromosomes = no_elite_chromosomes
         self.data = data
         self.best_population = None
+        self.max_iteration = max_iteration
 
-        population =Population(self.population_size, data)
-        population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
+        population = Population(self.population_size, data)
+        population.get_chromosomes().sort(key=lambda fit: fit.get_fitness(), reverse=True)
 
         x = 0
 
         while population.get_chromosomes()[0].get_fitness() != 1.0:
             population = self.evolve(population)
-            population.get_chromosomes().sort(key=lambda x: x.get_fitness(), reverse=True)
+            for i in range(self.population_size):
+                population.chromosomes[i].remove_hours_gap()
+
+            population.get_chromosomes().sort(key=lambda fit: fit.get_fitness(), reverse=True)
+
             if round(population.get_chromosomes()[0].fitness, 3) > x:
                 x = round(population.get_chromosomes()[0].fitness, 3)
-
                 print(x)
 
         self.best_population = population
@@ -88,7 +93,7 @@ class Chromosome:
         for subject in self.data.subjects:
             self.numberOfClasses += subject[1]
 
-        self.numberOfClasses *= len(self.data.groups)  # classes puste
+        self.numberOfClasses *= len(self.data.groups)
 
         for i in range(self.numberOfClasses):
             newClass = Class(self.classNumber)
@@ -118,6 +123,7 @@ class Chromosome:
         groups_hash_map = self.data.get_group_hashmap()
         subject_counter_tab = []
 
+        # dodaje poszczególne przedmioty i ilosci ich wystepowania
         for i in range(len(self.data.groups)):
             subject_counter_tab.append(self.data.get_subject_for_fitness())
 
@@ -139,7 +145,7 @@ class Chromosome:
                 self.numberOfConflicts += 1
 
             for j in range(0, len(classes)):
-                if classes[i].meeting_time == classes[j].meeting_time and classes[i].class_id != classes[j].class_id:
+                if classes[i].meeting_time == classes[j].meeting_time and classes[i].group != classes[j].group:
                     if classes[i].classroom == classes[j].classroom:
                         self.numberOfConflicts += 1
                     if classes[i].teacher == classes[j].teacher:
@@ -150,6 +156,23 @@ class Chromosome:
                 self.numberOfConflicts += abs(subject_counter_tab[j][i])
 
         return 1 / (1.0 * self.numberOfConflicts + 1)
+
+    def remove_hours_gap(self):
+
+        table_of_lessons = []
+        group_hash_map = self.data.get_group_hashmap()
+        time_hash_map = self.data.get_time_hasmap()
+        reversed_time_hash_map = self.data.get_reverse_time_hasmap()
+
+        for i in range(len(self.data.groups)):
+            table_of_lessons.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+        for i in range(len(self.classes)):
+            table_of_lessons[group_hash_map[self.classes[i].group]][time_hash_map[self.classes[i].meeting_time]] = self.classes[i]
+
+        for clas in range(len(self.data.groups)):
+            for day in range(5):
+                Removing_gaps.remove_gaps(tab=table_of_lessons, clas=clas, day=day, timehasmap=reversed_time_hash_map)
 
     def __str__(self):
         string = ""

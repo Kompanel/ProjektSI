@@ -1,7 +1,7 @@
 from tabulate import tabulate
 
 
-def display_table(tab_schedule, groups, time, group_hashmap, time_hasmap, time_hasmap_to_string):
+def display_table(tab_schedule, groups, time, group_hashmap, time_hasmap, time_hasmap_to_string, arg):
     tab = []
 
     first_row = ['']
