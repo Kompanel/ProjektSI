@@ -1,17 +1,19 @@
 def single_one(table, clas, day):
     for i in range(8):
 
-        if table[clas][day * 8 + i] != 0:
-            if i + 1 < 8:
-                if table[clas][day * 8 + i + 1] != 0:
+        if table[clas][day * 8 + i - 1] == 0:
 
-                    while table[clas][day * 8 + i]:
-                        if i + 1 < 8:
-                            i += 1
-                        else:
-                            break
-                else:
-                    return day * 8 + i
+            if table[clas][day * 8 + i] != 0:
+                if i + 1 < 8:
+                    if table[clas][day * 8 + i + 1] != 0:
+
+                        while table[clas][day * 8 + i]:
+                            if i + 1 < 8:
+                                i += 1
+                            else:
+                                break
+                    else:
+                        return day * 8 + i
 
     return -1
 
