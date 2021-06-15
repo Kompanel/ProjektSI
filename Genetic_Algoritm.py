@@ -1,16 +1,16 @@
 import random
 import Removing_gaps
-import Display
+import Teachers_reduce
+
 
 class GA:
 
-    def __init__(self, mutation_ratio, population_size, data, max_iteration, no_elite_chromosomes=1):
+    def __init__(self, mutation_ratio, population_size, data, no_elite_chromosomes=1):
         self.mutation_ratio = mutation_ratio
         self.population_size = population_size
         self.no_elite_chromosomes = no_elite_chromosomes
         self.data = data
         self.best_population = None
-        self.max_iteration = max_iteration
 
         population = Population(self.population_size, data)
         population.get_chromosomes().sort(key=lambda fit: fit.get_fitness(), reverse=True)
@@ -20,13 +20,16 @@ class GA:
         while population.get_chromosomes()[0].get_fitness() != 1.0:
             population = self.evolve(population)
             for i in range(self.population_size):
-                population.chromosomes[i].remove_hours_gap()
+                if population.get_chromosomes()[0].get_fitness() < 1/(1 + len(self.data.groups)):
+                    population.chromosomes[i].remove_hours_gap()
 
             population.get_chromosomes().sort(key=lambda fit: fit.get_fitness(), reverse=True)
 
             if round(population.get_chromosomes()[0].fitness, 3) > x:
                 x = round(population.get_chromosomes()[0].fitness, 3)
                 print(x)
+
+        population.get_chromosomes()[0].optimize_teacher_frequency()
 
         self.best_population = population
 
@@ -173,6 +176,21 @@ class Chromosome:
         for clas in range(len(self.data.groups)):
             for day in range(5):
                 Removing_gaps.remove_gaps(tab=table_of_lessons, clas=clas, day=day, timehasmap=reversed_time_hash_map)
+
+    def optimize_teacher_frequency(self):
+
+        table_of_teachers = []
+        group_hash_map = self.data.get_group_hashmap()
+        time_hash_map = self.data.get_time_hasmap()
+
+        for i in range(len(self.data.groups)):
+            table_of_teachers.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+
+        for i in range(len(self.data.groups)):
+            table_of_teachers[group_hash_map[self.classes[i].group]][time_hash_map[self.classes[i].meeting_time]] = self.classes[i]
+
+        for i in range(5):
+            Teachers_reduce.repair_day(tab=table_of_teachers, day=i, number_of_class=len(self.data.groups), table_of_teacher=self.data.teachers)
 
     def __str__(self):
         string = ""

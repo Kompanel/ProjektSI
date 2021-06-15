@@ -1,7 +1,7 @@
 from tabulate import tabulate
 
 
-def display_table(tab_schedule, groups, time, group_hashmap, time_hasmap, time_hasmap_to_string, arg):
+def display_table(tab_schedule, groups, time, group_hashmap, time_hasmap, time_hasmap_to_string):
     tab = []
 
     first_row = ['']
@@ -28,3 +28,7 @@ def display_table(tab_schedule, groups, time, group_hashmap, time_hasmap, time_h
         tab[indexx][indexy] = string
 
     print(tabulate(tab, headers="firstrow", tablefmt="grid"))
+
+    file = open("Class_table.txt", "w")
+    file.write(tabulate(tab, headers="firstrow", tablefmt="grid"))
+    file.close()

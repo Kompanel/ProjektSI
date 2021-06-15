@@ -108,10 +108,23 @@ class Configuration:
 
 data = Configuration()
 
-genetic = Genetic_Algoritm.GA(mutation_ratio=0.01, population_size=50, no_elite_chromosomes=1, data=data, max_iteration=10)
-genetic
+x = input("Do you want to use default param? [Y,N]")
+
+mutation_ratio = 0.01
+population_size = 50
+no_elite_chromosomes = 1
+
+if x == "N":
+    print("Input values")
+    mutation_ratio = input("mutation_ratio: ")
+    population_size = input("population_size: ")
+    no_elite_chromosomes = input("no_elite_chromosomes: ")
+
+
+genetic = Genetic_Algoritm.GA(mutation_ratio=0.01, population_size=50, no_elite_chromosomes=1, data=data)
 
 best_table = genetic.get_best_table()
 
 Display.display_table(groups=data.groups, time=data.time, tab_schedule=best_table, group_hashmap=data.get_group_hashmap(),
-                      time_hasmap=data.get_time_hasmap(), time_hasmap_to_string=data.get_time_hasmap_to_string(), arg=1)
+                      time_hasmap=data.get_time_hasmap(), time_hasmap_to_string=data.get_time_hasmap_to_string())
+
